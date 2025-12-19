@@ -36,8 +36,8 @@ export async function createNestApp(expressApp?: Express): Promise<INestApplicat
     .addTag('3d6')
     .build()
 
-  const documentFactory = () => SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api', app, documentFactory)
+  const document = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('api', app, document)
 
   useContainer(app.select(AppModule), { fallbackOnErrors: true })
 

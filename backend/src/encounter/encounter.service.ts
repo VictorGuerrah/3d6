@@ -54,7 +54,6 @@ export class EncounterService {
     const results: ComputeEncountersOutput[] = [];
     const seen = new Set<string>();
 
-    // Generate all unique multiset combinations
     const self = this;
     function backtrack(idx: number, current: number[], total: number) {
       if (total > threatTarget * 1.5) return;
@@ -86,7 +85,6 @@ export class EncounterService {
     }
     backtrack(0, Array(enemyTypes.length).fill(0), 0);
 
-    // Sort and limit results
     results.sort((a, b) => {
       const catOrder = ['Perfect', 'Good', 'Challenging', 'Risky', 'Weak'];
       const ca = catOrder.indexOf(a.category);
@@ -108,7 +106,6 @@ export class EncounterService {
     difficultyNumeric: number,
     allowSwarmTax: boolean,
   ): ComputeEncountersOutput | null {
-    // Calculate base threat and APR
     let baseThreatPoints = 0;
     let totalAPR = 0;
     const enemyStatsArr = enemyTypes.map((type) => ENEMY_STATS.find((e) => e.type === type)!);
@@ -127,7 +124,6 @@ export class EncounterService {
       nExtras = totalAPR - aprLimit;
       if (!allowSwarmTax) return null;
 
-      // Penalize nExtras weakest enemies
       const penalizables: { type: EnemyType; threat: number; count: number }[] = enemyTypes.map(
         (type, i) => ({
           type,
@@ -164,7 +160,6 @@ export class EncounterService {
     const diffThreatPoints = effectiveThreatPoints - threatTarget;
     const diffPercent = (effectiveThreatPoints / threatTarget - 1) * 100;
 
-    // Category
     let category = '';
     if (Math.abs(diffPercent) <= 5 && totalAPR <= aprLimit) category = 'Perfect';
     else if (Math.abs(diffPercent) <= 10 && totalAPR <= aprLimit) category = 'Good';

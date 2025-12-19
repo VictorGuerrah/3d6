@@ -142,7 +142,6 @@ function detectApiBaseUrl(): string {
     return 'https://3d6-backend.vercel.app';
   }
 
-  // Fallback: mesmo origin (se você colocar rewrite/proxy no futuro)
   return '';
 }
 
@@ -178,35 +177,92 @@ function primaryEnemyType(comp: EncounterComposition): string {
   return bestType;
 }
 
+function totalEnemies(comp: EncounterComposition): number {
+  return Object.values(comp).reduce((sum, qty) => sum + (qty > 0 ? qty : 0), 0);
+}
+
+function avgEnemyStrength(comp: EncounterComposition): number {
+  const strengthByType = new Map<string, number>(
+    ENEMY_TYPES.map((t, idx) => [t, idx + 1]),
+  );
+  const total = totalEnemies(comp);
+  if (total <= 0) return 0;
+  let points = 0;
+  for (const [type, qty] of Object.entries(comp)) {
+    if (qty <= 0) continue;
+    points += (strengthByType.get(type) ?? 0) * qty;
+  }
+  return points / total;
+}
+
 function pickVariedEncountersGrouped(all: EncounterResult[]): Record<DisplayCategory, EncounterResult[]> {
-  const caps: Record<DisplayCategory, number> = { Balanced: 3, Challenging: 3 };
+  const caps: Record<DisplayCategory, number> = { Balanced: 5, Challenging: 5 };
   const buckets: Record<DisplayCategory, EncounterResult[]> = { Balanced: [], Challenging: [] };
   for (const r of all) buckets[getDisplayCategory(r.category)].push(r);
 
   const usedSignatures = new Set<string>();
-  const usedPrimary = new Set<string>();
+
+  const rank = (cat: DisplayCategory, r: EncounterResult) => {
+    const strength = avgEnemyStrength(r.composition);
+    const dp = Math.abs(r.diffPercent);
+    return cat === 'Balanced'
+      ? [dp, r.effectiveThreatPoints ?? 0, -strength]
+      : [-(r.effectiveThreatPoints ?? 0), -strength, -dp];
+  };
 
   const pick = (cat: DisplayCategory, count: number): EncounterResult[] => {
     const list = buckets[cat]
       .slice()
       .sort((a, b) => {
-        const ap = primaryEnemyType(a.composition);
-        const bp = primaryEnemyType(b.composition);
-        const aNew = usedPrimary.has(ap) ? 1 : 0;
-        const bNew = usedPrimary.has(bp) ? 1 : 0;
-        if (aNew !== bNew) return aNew - bNew;
-        return Math.abs(a.diffPercent) - Math.abs(b.diffPercent);
+        const ra = rank(cat, a);
+        const rb = rank(cat, b);
+        for (let i = 0; i < Math.max(ra.length, rb.length); i++) {
+          const av = ra[i] ?? 0;
+          const bv = rb[i] ?? 0;
+          if (av !== bv) return av < bv ? -1 : 1;
+        }
+        return 0;
       });
 
     const out: EncounterResult[] = [];
-    for (const r of list) {
-      if (out.length >= count) break;
+    const usedPrimaryLocal = new Set<string>();
+    const usedTotalsLocal = new Set<number>();
+
+    const tryAdd = (r: EncounterResult, strict: boolean) => {
+      if (out.length >= count) return;
       const sig = compositionSignature(r.composition);
-      if (usedSignatures.has(sig)) continue;
+      if (usedSignatures.has(sig)) return;
+
+      const p = primaryEnemyType(r.composition);
+      const t = totalEnemies(r.composition);
+
+      if (strict) {
+        if (usedPrimaryLocal.has(p)) return;
+        if (usedTotalsLocal.has(t)) return;
+      } else {
+        if (usedPrimaryLocal.has(p)) return;
+      }
+
       out.push(r);
       usedSignatures.add(sig);
-      usedPrimary.add(primaryEnemyType(r.composition));
+      usedPrimaryLocal.add(p);
+      usedTotalsLocal.add(t);
+    };
+
+    for (const r of list) tryAdd(r, true);
+    if (out.length < count) {
+      for (const r of list) tryAdd(r, false);
     }
+    if (out.length < count) {
+      for (const r of list) {
+        if (out.length >= count) break;
+        const sig = compositionSignature(r.composition);
+        if (usedSignatures.has(sig)) continue;
+        out.push(r);
+        usedSignatures.add(sig);
+      }
+    }
+
     return out;
   };
 
@@ -276,7 +332,7 @@ function App() {
           numPlayers,
           difficulty,
           enemyPool,
-          maxResults: 30,
+          maxResults: 200,
         }),
       });
       if (!res.ok) throw new Error(t.failedFetch);
