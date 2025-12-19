@@ -4,6 +4,7 @@
 
 .app {
   width: min(900px, 100%);
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -163,28 +164,26 @@
 }
 
 .resultSummary {
-  list-style: none;
+  border: 0;
+  background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
   max-width: 100%;
-}
-
-.resultSummary::-webkit-details-marker {
-  display: none;
 }
 
 .resultSummary .resultHeader {
   width: 100%;
 }
 
-details.resultCard[open] {
+.resultCard[data-state='open'] {
   border-color: var(--accent);
 }
 
-details.resultCard[open] .resultSummary {
+.resultCard[data-state='open'] .resultSummary {
   margin-bottom: 12px;
 }
 
@@ -194,7 +193,7 @@ details.resultCard[open] .resultSummary {
   opacity: 0.7;
 }
 
-details.resultCard[open] .resultSummary::after {
+.resultCard[data-state='open'] .resultSummary::after {
   content: '▴';
 }
 
@@ -256,12 +255,8 @@ details.resultCard[open] .resultSummary::after {
   overflow: hidden;
 }
 
-details.resultCard[data-state='open'] .resultBody {
+.resultCard[data-state='open'] .resultBody {
   grid-template-rows: 1fr;
-}
-
-details.resultCard[data-state='closing'] .resultBody {
-  grid-template-rows: 0fr;
 }
 
 .resultBodyInner {
@@ -283,12 +278,12 @@ details.resultCard[data-state='closing'] .resultBody {
   transition-delay: calc(50ms + (var(--i, 0) * 45ms));
 }
 
-details.resultCard[data-state='open'] .suggestionRow {
+.resultCard[data-state='open'] .suggestionRow {
   opacity: 1;
   transform: translateY(0);
 }
 
-details.resultCard[data-state='closing'] .suggestionRow {
+.resultCard[data-state='closed'] .suggestionRow {
   opacity: 0;
   transform: translateY(-6px);
   transition-delay: 0ms;

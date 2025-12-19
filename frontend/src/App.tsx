@@ -1,6 +1,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import './App.css';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './components/ui/collapsible';
 
 type Locale = 'en' | 'pt-BR';
 
@@ -118,7 +119,6 @@ type EncounterResult = {
 
 type DisplayCategory = 'Balanced' | 'Challenging';
 
-const DROPDOWN_ANIMATION_MS = 280;
 
 function detectApiBaseUrl(): string {
   const envUrl = (import.meta as any).env?.VITE_API_URL?.toString?.()?.trim?.() ?? '';
@@ -294,10 +294,6 @@ function App() {
     Balanced: false,
     Challenging: false,
   });
-  const [closingByCategory, setClosingByCategory] = useState<Record<DisplayCategory, boolean>>({
-    Balanced: false,
-    Challenging: false,
-  });
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -414,32 +410,15 @@ function App() {
 
       <div className="results">
         {(['Balanced', 'Challenging'] as const).map((cat) => (
-          <details
+          <Collapsible
             key={cat}
             className="resultCard"
-            open={openByCategory[cat] || closingByCategory[cat]}
-            data-state={
-              openByCategory[cat] ? 'open' : closingByCategory[cat] ? 'closing' : 'closed'
-            }
+            open={openByCategory[cat]}
+            onOpenChange={(open: boolean) => setOpenByCategory((prev) => ({ ...prev, [cat]: open }))}
+            data-state={openByCategory[cat] ? 'open' : 'closed'}
           >
-            <summary
+            <CollapsibleTrigger
               className="resultSummary"
-              onClick={(e) => {
-                e.preventDefault();
-                const isOpen = openByCategory[cat];
-                const isClosing = closingByCategory[cat];
-                if (isClosing) return;
-
-                if (isOpen) {
-                  setOpenByCategory((prev) => ({ ...prev, [cat]: false }));
-                  setClosingByCategory((prev) => ({ ...prev, [cat]: true }));
-                  window.setTimeout(() => {
-                    setClosingByCategory((prev) => ({ ...prev, [cat]: false }));
-                  }, DROPDOWN_ANIMATION_MS);
-                } else {
-                  setOpenByCategory((prev) => ({ ...prev, [cat]: true }));
-                }
-              }}
             >
               <div className="resultHeader">
                 <div className="resultLeft">
@@ -447,30 +426,32 @@ function App() {
                   <div className="resultSubtitle">{t.hints[cat]}</div>
                 </div>
               </div>
-            </summary>
+            </CollapsibleTrigger>
 
-            <div className="resultBody">
-              <div className="resultBodyInner">
-                <div className="suggestions">
-                  {results[cat].map((r, idx) => (
-                    <div key={idx} className="suggestionRow" style={{ ['--i' as any]: idx }}>
-                      <div className="badges">
-                        {ENEMY_TYPES.map(type => r.composition[type] > 0 && (
-                          <span key={type} className="badge">
-                            {r.composition[type]} × {t.enemyTypes[type as keyof typeof t.enemyTypes] ?? type}
-                          </span>
-                        ))}
+            <CollapsibleContent forceMount asChild>
+              <div className="resultBody">
+                <div className="resultBodyInner">
+                  <div className="suggestions">
+                    {results[cat].map((r, idx) => (
+                      <div key={idx} className="suggestionRow" style={{ ['--i' as any]: idx }}>
+                        <div className="badges">
+                          {ENEMY_TYPES.map(type => r.composition[type] > 0 && (
+                            <span key={type} className="badge">
+                              {r.composition[type]} × {t.enemyTypes[type as keyof typeof t.enemyTypes] ?? type}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
 
-                  {results[cat].length === 0 && (
-                    <div className="emptyState">{t.emptySuggestions}</div>
-                  )}
+                    {results[cat].length === 0 && (
+                      <div className="emptyState">{t.emptySuggestions}</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          </details>
+            </CollapsibleContent>
+          </Collapsible>
         ))}
       </div>
     </div>
