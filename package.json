@@ -1,0 +1,32 @@
+{
+  "name": "3d6-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "3D6 Encounter Generator - Monorepo",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:backend": "npm run start:dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces --if-present",
+    "build:backend": "npm run build --workspace=backend",
+    "build:frontend": "npm run build --workspace=frontend",
+    "start:backend": "npm run start:prod --workspace=backend",
+    "start:frontend": "npm run preview --workspace=frontend",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspace=backend",
+    "test:e2e": "npm run test:e2e --workspace=backend",
+    "clean": "npm run clean --workspaces --if-present && rimraf node_modules",
+    "install:all": "npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}
