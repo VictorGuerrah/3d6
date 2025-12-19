@@ -120,6 +120,8 @@ type DisplayCategory = 'Balanced' | 'Challenging';
 
 const DROPDOWN_ANIMATION_MS = 280;
 
+const API_BASE_URL = (import.meta as any).env?.VITE_API_URL?.toString?.() ?? '';
+
 function getDisplayCategory(category: string): DisplayCategory {
   if (category === 'Challenging' || category === 'Risky') return 'Challenging';
   return 'Balanced';
@@ -236,7 +238,7 @@ function App() {
     setError(null);
     setResults({ Balanced: [], Challenging: [] });
     try {
-      const res = await fetch('/encounter/compute', {
+      const res = await fetch(`${API_BASE_URL}/encounter/compute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
