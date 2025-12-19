@@ -120,7 +120,38 @@ type DisplayCategory = 'Balanced' | 'Challenging';
 
 const DROPDOWN_ANIMATION_MS = 280;
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL?.toString?.() ?? '';
+function detectApiBaseUrl(): string {
+  const envUrl = (import.meta as any).env?.VITE_API_URL?.toString?.()?.trim?.() ?? '';
+  if (envUrl) return envUrl.replace(/\/$/, '');
+
+  if (typeof window === 'undefined') return '';
+
+  const host = window.location.hostname;
+  const isLocalhost =
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '::1' ||
+    host.endsWith('.local');
+
+  if (isLocalhost) return '';
+
+  if (host.endsWith('-frontend.vercel.app')) {
+    return `https://${host.replace('-frontend.vercel.app', '-backend.vercel.app')}`;
+  }
+  if (host === '3d6-frontend.vercel.app') {
+    return 'https://3d6-backend.vercel.app';
+  }
+
+  // Fallback: mesmo origin (se você colocar rewrite/proxy no futuro)
+  return '';
+}
+
+function joinUrl(base: string, path: string): string {
+  if (!base) return path;
+  return `${base.replace(/\/$/, '')}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+const API_BASE_URL = detectApiBaseUrl();
 
 function getDisplayCategory(category: string): DisplayCategory {
   if (category === 'Challenging' || category === 'Risky') return 'Challenging';
@@ -238,7 +269,7 @@ function App() {
     setError(null);
     setResults({ Balanced: [], Challenging: [] });
     try {
-      const res = await fetch(`${API_BASE_URL}/encounter/compute`, {
+      const res = await fetch(joinUrl(API_BASE_URL, '/encounter/compute'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
