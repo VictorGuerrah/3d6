@@ -191,10 +191,10 @@ function App() {
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'light' || saved === 'dark' ? saved : 'dark';
+    return saved === 'light' || saved === 'dark' ? saved : 'light';
   });
 
-  const [numPlayers, setNumPlayers] = useState(4);
+  const [numPlayers, setNumPlayers] = useState(3);
   const [difficulty, setDifficulty] = useState('Medium');
   const [enemyPool, setEnemyPool] = useState<string[]>([...ENEMY_TYPES]);
   const [results, setResults] = useState<Record<DisplayCategory, EncounterResult[]>>({ Balanced: [], Challenging: [] });
@@ -202,7 +202,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   const [openByCategory, setOpenByCategory] = useState<Record<DisplayCategory, boolean>>({
-    Balanced: true,
+    Balanced: false,
     Challenging: false,
   });
   const [closingByCategory, setClosingByCategory] = useState<Record<DisplayCategory, boolean>>({
