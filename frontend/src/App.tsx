@@ -236,7 +236,7 @@ function App() {
     setError(null);
     setResults({ Balanced: [], Challenging: [] });
     try {
-      const res = await fetch('http://localhost:3000/encounter/compute', {
+      const res = await fetch('/encounter/compute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
